@@ -1,6 +1,7 @@
 import fastify from 'fastify'
 import uuid from 'node:crypto'
 import { database } from './database'
+import { environment } from './env'
 
 const app = fastify()
 
@@ -26,7 +27,7 @@ app.get('/', async (request, reply) => {
 
 app
   .listen({
-    port: 3000,
+    port: environment.PORT,
   })
   .then((address) => {
     console.log(`server listening on ${address}`)
