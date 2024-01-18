@@ -5,63 +5,47 @@ import { database } from '../database'
 import { checkSessionIdExists } from '../middlewares/check-session-id-exists'
 
 export async function transactionsRoutes(app: FastifyInstance) {
-  app.get(
-    '/',
-    {
-      preHandler: [checkSessionIdExists],
-    },
-    async (request, reply) => {
-      const { sessionId } = request.cookies
+  app.addHook('preHandler', checkSessionIdExists)
 
-      const transactions = await database('transactions')
-        .where('session_id', sessionId)
-        .select('*')
+  app.get('/', async (request, reply) => {
+    const sessionId = request.cookies.sessionId
 
-      return reply.status(200).send(transactions)
-    },
-  )
+    const transactions = await database('transactions')
+      .where('session_id', sessionId)
+      .select('*')
 
-  app.get(
-    '/:id',
-    {
-      preHandler: [checkSessionIdExists],
-    },
-    async (request, reply) => {
-      const { sessionId } = request.cookies
+    return reply.status(200).send(transactions)
+  })
 
-      const getTransactionParamsSchema = z.object({ id: z.string().uuid() })
-      const { id } = getTransactionParamsSchema.parse(request.params)
+  app.get('/:id', async (request, reply) => {
+    const sessionId = request.cookies.sessionId
 
-      const transaction = await database('transactions')
-        .where({
-          session_id: sessionId,
-          id,
-        })
-        .first()
+    const getTransactionParamsSchema = z.object({ id: z.string().uuid() })
+    const { id } = getTransactionParamsSchema.parse(request.params)
 
-      if (!transaction) return reply.status(404).send()
+    const transaction = await database('transactions')
+      .where({
+        session_id: sessionId,
+        id,
+      })
+      .first()
 
-      return reply.status(200).send(transaction)
-    },
-  )
+    if (!transaction) return reply.status(404).send()
 
-  app.get(
-    '/summary',
-    {
-      preHandler: [checkSessionIdExists],
-    },
-    async (request, reply) => {
-      const { sessionId } = request.cookies
-      const summary = await database('transactions')
-        .where({
-          session_id: sessionId,
-        })
-        .sum('amount', { as: 'amount' })
-        .first()
+    return reply.status(200).send(transaction)
+  })
 
-      return reply.status(200).send(summary)
-    },
-  )
+  app.get('/summary', async (request, reply) => {
+    const sessionId = request.cookies.sessionId
+    const summary = await database('transactions')
+      .where({
+        session_id: sessionId,
+      })
+      .sum('amount', { as: 'amount' })
+      .first()
+
+    return reply.status(200).send(summary)
+  })
 
   app.post('/', async (request, reply) => {
     const createTransactionBodySchema = z.object({
