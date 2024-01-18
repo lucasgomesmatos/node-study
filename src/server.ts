@@ -1,3 +1,4 @@
+import cookie from '@fastify/cookie'
 import fastify from 'fastify'
 import uuid from 'node:crypto'
 import { database } from './database'
@@ -5,6 +6,8 @@ import { environment } from './env'
 import { transactionsRoutes } from './routes/transactions'
 
 const app = fastify()
+
+app.register(cookie)
 
 app.register(transactionsRoutes, {
   prefix: '/transactions',
