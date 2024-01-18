@@ -2,8 +2,13 @@ import fastify from 'fastify'
 import uuid from 'node:crypto'
 import { database } from './database'
 import { environment } from './env'
+import { transactionsRoutes } from './routes/transactions'
 
 const app = fastify()
+
+app.register(transactionsRoutes, {
+  prefix: '/transactions',
+})
 
 app.post('/', async () => {
   const transaction = await database('transactions')
@@ -15,14 +20,6 @@ app.post('/', async () => {
     .returning('*')
 
   return transaction
-})
-
-app.get('/', async (request, reply) => {
-  const transactions = await database('transactions')
-    .where('amount', '>', 100)
-    .select('*')
-
-  return transactions
 })
 
 app
